@@ -28,10 +28,7 @@ jobs:
       run: npm install
 
     - name: Run Semgrep (SAST)
-      uses: returntocorp/semgrep-action@v1
-      with:
-        config: "auto"
-        fail_ci_on_error: false
+      run: docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep:latest semgrep ci --config auto --json > semgrep-report.json || true
 
     - name: Upload Semgrep report artifact
       if: always()

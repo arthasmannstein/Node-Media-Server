@@ -91,30 +91,12 @@ jobs:
       run: echo "Preparing for OWASP ZAP scan"
 
 
-    - name: Run Node-Media-Server for DAST
-      continue-on-error: true
-      run: |
-        docker build -t nms:2.6.4 .
-        docker run -d -p 8000:8000 --name nms nms:2.6.4
-        sleep 10
-
-    - name: Wait for NMS to be ready
-      run: |
-        for i in {1..10}; do
-          curl -sSf http://localhost:8000 && break
-          echo "Waiting for server..."
-          sleep 3
-        done
-
-    - name: Debug: Check NMS response
-      run: curl -i http://localhost:8000/api/version || true
-
     - name: Run OWASP ZAP Baseline Scan (GitHub Action)
       uses: zaproxy/action-baseline@v0.10.0
       with:
         fail_action: false
         cmd_options: '-a -g zap-report.md -r zap-report.html'
-        target: 'http://localhost:8000/api/version'
+        target: 'https://crpn.ru:8084'
 
     - name: Upload ZAP report artifact
       continue-on-error: true

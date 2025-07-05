@@ -85,17 +85,6 @@ jobs:
           -F "autoCreate=true" \
           -F "bom=@trivy-sbom.json"
 
-
-
-# ZAP scan moved to a separate job below
-
-  zap-scan:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
     - name: Run ZAP Baseline Scan via Docker as root
       run: |
         set +e

@@ -108,12 +108,14 @@ jobs:
 
 
     - name: Run OWASP ZAP Baseline Scan (GitHub Action)
-      continue-on-error: true
+      continue-on-error: false
       uses: zaproxy/action-baseline@v0.10.0
       with:
         target: 'http://localhost:8000'
         cmd_options: '-a -g zap-report.md -r zap-report.html'
-        fail_action: true
+        fail_action: false
+
+        fi
 
     - name: Upload ZAP report artifact
       continue-on-error: true

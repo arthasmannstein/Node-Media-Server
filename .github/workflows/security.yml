@@ -10,7 +10,6 @@ jobs:
   security-checks:
     runs-on: ubuntu-latest
 
-
     env:
       DEPTRACK_API_URL: ${{ secrets.DEPTRACK_API_URL }}
       DEPTRACK_API_KEY: ${{ secrets.DEPTRACK_API_KEY }}
@@ -89,7 +88,6 @@ jobs:
     - name: Prepare DAST
       continue-on-error: true
       run: echo "Preparing for OWASP ZAP scan"
-
 
     - name: Run OWASP ZAP Baseline Scan (GitHub Action)
       uses: zaproxy/action-baseline@v0.10.0

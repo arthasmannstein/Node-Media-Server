@@ -93,7 +93,7 @@ jobs:
       uses: zaproxy/action-baseline@v0.10.0
       with:
         fail_action: false
-        cmd_options: '-a -g zap-report.md -r zap-report.html -w zap-warnings.txt'
+        cmd_options: '-a -d -g zap-report.md -r zap-report.html -w zap-warnings.txt -c .zap/rules.tsv'
         target: 'https://crpn.ru:8084'
 
     - name: Debug Check if ZAP report exists

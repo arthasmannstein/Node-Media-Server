@@ -102,7 +102,7 @@ jobs:
     - name: Run OWASP ZAP baseline scan manually
       continue-on-error: true
       run: |
-        docker run --rm -v ${{ github.workspace }}:/zap/wrk:rw -t ghcr.io/zaproxy/zap2docker-stable zap-baseline.py \
+        docker run --rm -v ${{ github.workspace }}:/zap/wrk:rw -t owasp/zap2docker-stable zap-baseline.py \
           -t http://host.docker.internal:8000 \
           -a -g zap-report.md -r zap-report.html || true
 

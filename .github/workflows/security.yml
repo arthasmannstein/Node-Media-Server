@@ -9,10 +9,6 @@ on:
 jobs:
   security-checks:
     runs-on: ubuntu-latest
-    services:
-      docker:
-        image: docker:20.10.16-dind
-        privileged: true
 
     env:
       DEPTRACK_API_URL: ${{ secrets.DEPTRACK_API_URL }}

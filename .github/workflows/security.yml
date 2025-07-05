@@ -106,7 +106,7 @@ jobs:
           sleep 3
         done
 
-    - name: Debug: Check NMS response
+    - name: Debug Check NMS response
       run: curl -i http://localhost:8000/api/version || true
 
     - name: Run OWASP ZAP Baseline Scan (GitHub Action)

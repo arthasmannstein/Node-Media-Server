@@ -98,6 +98,14 @@ jobs:
         docker run -d -p 8000:8000 --name nms nms:2.6.4
         sleep 10
 
+    - name: Wait for NMS to be ready
+      run: |
+        for i in {1..10}; do
+          curl -sSf http://localhost:8000 && break
+          echo "Waiting for server..."
+          sleep 3
+        done
+
 
     - name: Run OWASP ZAP Baseline Scan (GitHub Action)
       continue-on-error: true

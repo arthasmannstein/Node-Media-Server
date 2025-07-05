@@ -103,7 +103,11 @@ jobs:
       continue-on-error: true
       run: |
         docker pull zaproxy/zap-stable
-        docker run --rm -v ${{ github.workspace }}:/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py \
+        docker run --rm \
+          -v ${{ github.workspace }}:/zap/wrk:rw \
+          -w /zap/wrk \
+          zaproxy/zap-stable \
+          zap-baseline.py \
           -t http://host.docker.internal:8000 \
           -a -g zap-report.md -r zap-report.html || true
 

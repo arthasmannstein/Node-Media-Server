@@ -85,17 +85,57 @@ jobs:
           -F "autoCreate=true" \
           -F "bom=@trivy-sbom.json"
 
-    - name: Run OWASP ZAP Baseline Scan
-      continue-on-error: true
-      uses: zaproxy/action-baseline@v0.10.0
-      with:
-        target: 'https://crpn.ru:8084'
-        cmd_options: '-a -d -g zap-report.md -r zap-report.html -w zap-warnings.txt'
-        fail_action: false
 
-    - name: Upload ZAP HTML report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: zap-html-report
-        path: zap-report.html
+# ZAP scan moved to a separate job below
+
+zap-scan:
+  runs-on: ubuntu-latest
+
+  steps:
+  - name: Checkout repository
+    uses: actions/checkout@v3
+
+  - name: Run ZAP Baseline Scan via Docker as root
+    run: |
+      set +e
+      docker run --rm \
+        --user root \
+        -v ${{ github.workspace }}:/zap/wrk \
+        ghcr.io/zaproxy/zaproxy:stable \
+        /zap/zap-baseline.py \
+        -t https://crpn.ru:8084 \
+        -r zap-report.html \
+        -w zap-warnings.txt \
+        -g zap-report.md \
+        -J zap-report.json \
+        -a -d
+      echo "ZAP scan finished with exit code $?"
+    continue-on-error: true
+
+  - name: Upload ZAP HTML report
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: zap-html-report
+      path: zap-report.html
+
+  - name: Upload ZAP Markdown report
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: zap-md-report
+      path: zap-report.md
+
+  - name: Upload ZAP JSON report
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: zap-json-report
+      path: zap-report.json
+
+  - name: Upload ZAP warnings
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: zap-warnings
+      path: zap-warnings.txt

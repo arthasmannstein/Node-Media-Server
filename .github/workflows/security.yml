@@ -10,11 +10,6 @@ jobs:
   security-checks:
     runs-on: ubuntu-latest
 
-    services:
-      nms:
-        image: nms:2.6.4
-        ports:
-          - 8000:8000
 
     env:
       DEPTRACK_API_URL: ${{ secrets.DEPTRACK_API_URL }}
@@ -96,11 +91,19 @@ jobs:
       run: echo "Preparing for OWASP ZAP scan"
 
 
+    - name: Run Node-Media-Server for DAST
+      continue-on-error: true
+      run: |
+        docker build -t nms:2.6.4 .
+        docker run -d -p 8000:8000 --name nms nms:2.6.4
+        sleep 10
+
+
     - name: Run OWASP ZAP baseline scan
       continue-on-error: true
       uses: zaproxy/action-baseline@v0.10.0
       with:
-        target: 'http://nms:8000'
+        target: 'http://host.docker.internal:8000'
         fail_action: false
         cmd_options: '-a -g zap-report.md -r zap-report.html'
 

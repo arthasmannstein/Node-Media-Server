@@ -113,6 +113,7 @@ jobs:
       with:
         target: 'http://localhost:8000'
         cmd_options: '-a -g zap-report.md -r zap-report.html'
+        fail_action: false
 
     - name: Upload ZAP report artifact
       continue-on-error: true

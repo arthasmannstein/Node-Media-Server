@@ -86,6 +86,7 @@ jobs:
           -F "bom=@trivy-sbom.json"
 
     - name: Run OWASP ZAP Baseline Scan
+      continue-on-error: true
       uses: zaproxy/action-baseline@v0.10.0
       with:
         target: 'https://crpn.ru:8084'

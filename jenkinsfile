@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+
+    environment {
+        REPORT_DIR = 'reports'
+        DEPTRACK_API_URL = credentials('deptrack_api_url')
+        DEPTRACK_API_KEY = credentials('deptrack_api_key')
+        DEPTRACK_PROJECT_NAME = credentials('deptrack_project_name')
+    }
+
+    stages {
+        stage('Проверка и установка Docker') {
+            steps {
+                sh '''
+                    echo "[Диагностика окружения]"
+                    if ! which docker > /dev/null; then
+                        echo "[*] Устанавливаем Docker вручную..."
+                        ARCH=$(uname -m)
+                        VERSION=$(curl -s https://api.github.com/repos/moby/moby/releases/latest | grep tag_name | cut -d '"' -f 4)
+                        echo "Скачиваем Docker версии: $VERSION"
+                        curl -fsSL -o docker.tgz https://download.docker.com/linux/static/stable/$ARCH/docker-${VERSION}.tgz
+                        tar -xzf docker.tgz
+                        chmod +x docker/*
+                        mv docker/* /usr/local/bin/
+                    else
+                        echo "[+] Docker уже установлен:"
+                        docker --version
+                    fi
+                '''
+            }
+        }
+
+        stage('Semgrep (SAST)') {
+            steps {
+                sh '''
+                    echo "[Semgrep]"
+                    mkdir -p $REPORT_DIR
+                    docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep scan --config auto --json > $REPORT_DIR/semgrep.json || true
+                '''
+            }
+        }
+
+        stage('Trivy (SBOM и уязвимости)') {
+            steps {
+                sh '''
+                    echo "[Trivy SBOM]"
+                    mkdir -p $REPORT_DIR
+                    docker run --rm -v $(pwd):/project aquasec/trivy:latest sbom --format cyclonedx /project > $REPORT_DIR/sbom.json
+                '''
+            }
+        }
+
+        stage('ZAP (DAST)') {
+            steps {
+                sh '''
+                    echo "[ZAP DAST]"
+                    docker run --rm -v $(pwd):/zap/wrk ghcr.io/zaproxy/zaproxy:stable /zap/zap-baseline.py \
+                      -t https://crpn.ru:8084 \
+                      -r $REPORT_DIR/zap-report.html \
+                      -w $REPORT_DIR/zap-warnings.txt \
+                      -g $REPORT_DIR/zap-report.md \
+                      -J $REPORT_DIR/zap-report.json \
+                      -a || true
+                '''
+            }
+        }
+
+        stage('Отправка SBOM в Dependency Track') {
+            steps {
+                sh '''
+                    echo "[Dependency Track Upload]"
+                    curl -X POST "${DEPTRACK_API_URL}/api/v1/bom" \
+                        -H "X-Api-Key: ${DEPTRACK_API_KEY}" \
+                        -H "Content-Type: multipart/form-data" \
+                        -F "project=${DEPTRACK_PROJECT_NAME}" \
+                        -F "bom=@$REPORT_DIR/sbom.json" || true
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "[Архивация отчётов]"
+            archiveArtifacts artifacts: "${env.REPORT_DIR}/*", fingerprint: true
+        }
+    }
+}

@@ -28,10 +28,12 @@ jobs:
       run: npm install
 
     - name: Run Semgrep (SAST)
-      uses: returntocorp/semgrep-action@v1
-      with:
-        config: "auto"
-        fail_ci_on_error: false
+      continue-on-error: true
+      run: |
+        docker run --rm \
+          -v $(pwd):/src \
+          returntocorp/semgrep:latest \
+          semgrep scan --config auto --error --output semgrep-report.json --json
 
     - name: Generate SBOM with Syft
       continue-on-error: true
